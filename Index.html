@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casanova Daily Log</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .form-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .section-header {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #1f2937;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .input-group input, .input-group textarea, .input-group select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.2s ease-in-out;
+        }
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+            outline: none;
+        }
+        .selected-list {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            min-height: 8rem;
+            background-color: #f9fafb;
+            height: auto; /* Allow height to expand */
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .selected-list.show {
+            max-height: 500px; /* A sufficiently large value to accommodate content */
+            opacity: 1;
+            padding: 0.75rem;
+            min-height: 8rem;
+        }
+        .selected-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .remove-btn:hover {
+            color: #ef4444;
+        }
+        .message-box {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #10b981;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+        .image-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease-in-out;
+        }
+        .image-upload-area.hover {
+            border-color: #2563eb;
+        }
+        .thumbnail-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .thumbnail {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .remove-thumbnail {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .remove-thumbnail:hover {
+            background-color: rgba(239, 68, 68, 0.8);
+        }
+        /* New styling for required fields when 100% is selected */
+        .required-field {
+            border: 2px solid #ef4444 !important;
+            color: #ef4444 !important;
+        }
+        .required-field::placeholder {
+            color: #fca5a5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <div class="flex flex-col items-center mb-8">
+            <h1 class="text-3xl font-bold text-center text-gray-800">Casanova Daily Log</h1>
+        </div>
+        <form id="dailyLogForm">
+            <!-- General Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="input-group">
+                    <label for="date" class="block text-sm mb-1">Date:</label>
+                    <input type="date" id="date" name="date" class="w-full">
+                </div>
+                <div class="input-group">
+                    <label for="project-name" class="block text-sm mb-1">Project Name (Phase):</label>
+                    <select id="project-name" name="project-name" class="w-full">
+                        <option value="" disabled selected hidden>Select a Project</option>
+                        <option value="Oxbow">Oxbow</option>
+                        <option value="Lakeshore Village">Lakeshore Village</option>
+                        <option value="Alta 10th">Alta 10th</option>
+                        <option value="Novel River District">Novel River District</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="project-type" class="block text-sm mb-1">Type of Project:</label>
+                    <select id="project-type" name="project-type" class="w-full">
+                        <option value="Commercial Multi-Family">Commercial Multi-Family</option>
+                        <option value="Residential Single-Family">Residential Single-Family</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Team Information -->
+            <div class="mb-8">
+                <h2 class="section-header">Team Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-group">
+                        <label for="project-manager" class="block text-sm mb-1">Project Manager (editable):</label>
+                        <input type="text" id="project-manager" name="project-manager" class="w-full" value="Gustavo Arango">
+                    </div>
+                    <div class="input-group">
+                        <label for="assistant-project-manager" class="block text-sm mb-1">Assistant Project Manager (editable):</label>
+                        <input type="text" id="assistant-project-manager" name="assistant-project-manager" class="w-full" value="Ricardo Torres">
+                    </div>
+                    <div class="input-group">
+                        <label for="field-manager" class="block text-sm mb-1">Field Manager (editable):</label>
+                        <select id="field-manager" name="field-manager" class="w-full">
+                            <option value="">Select a Field Manager</option>
+                            <option value="Bryan Villafana-Mendoza">Bryan Villafana-Mendoza</option>
+                            <option value="William Marin">William Marin</option>
+                            <option value="Cecilia Rodriguez">Cecilia Rodriguez</option>
+                            <option value="Jose Carlos Sabogal">Jose Carlos Sabogal</option>
+                            <option value="Wilber Montes Hernandez">Wilber Montes Hernandez</option>
+                        </select>
+                    </div>
+                    <!-- Foreman/Crew Lead section updated -->
+                    <div class="input-group md:col-span-2">
+                        <label class="block text-sm mb-1">Foreman/Crew Lead (select multiple):</label>
+                        <div class="flex flex-col sm:flex-row gap-2 items-center">
+                            <select id="foreman-select" multiple class="w-full sm:w-1/2 h-24">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                            <input type="text" id="newForemanName" class="w-full sm:w-1/2" placeholder="Add new Foreman name">
+                            <button type="button" id="addForemanBtn" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-200 w-full sm:w-auto">
+                                Add Foreman
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Selected Foremen list -->
+                    <div class="input-group md:col-span-2">
+                        <label class="block text-sm mb-1">Selected Crew Leads:</label>
+                        <div id="selectedForemenList" class="selected-list show">
+                            <!-- Selected foremen will be added here -->
+                        </div>
+                    </div>
+                    <!-- Time inputs changed to select dropdowns -->
+                    <div class="input-group md:col-span-2">
+                        <label for="time-inputs" class="block text-sm mb-1">Start Time - End Time (per crew):</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <select id="start-time" name="start-time" class="w-full"></select>
+                            <select id="end-time" name="end-time" class="w-full"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Elevation Management -->
+            <div class="mb-8">
+                <h2 class="section-header">Elevation Management</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <!-- Updated Building Name to a dropdown -->
+                    <div class="input-group">
+                        <label for="building-name" class="block text-sm mb-1">Building Name:</label>
+                        <select id="building-name" class="w-full">
+                            <option value="">Select Building</option>
+                            <!-- Options from 1-15 populated by JS -->
+                        </select>
+                    </div>
+                    <!-- Updated Elevation Description to a dropdown -->
+                    <div class="input-group">
+                        <label for="elevation-description" class="block text-sm mb-1">Elevation Description:</label>
+                        <select id="elevation-description" class="w-full">
+                            <option value="">Select Elevation</option>
+                            <option value="North">North</option>
+                            <option value="South">South</option>
+                            <option value="East">East</option>
+                            <option value="West">West</option>
+                            <option value="Clubhouse">Clubhouse</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Removed Add Elevation button -->
+                <div class="input-group">
+                    <label class="block text-sm mb-1">Elevations added:</label>
+                    <div id="elevationsList" class="selected-list show">
+                        <p class="italic text-gray-500">No elevations added yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Performed -->
+            <div class="mb-8">
+                <h2 class="section-header">Work Performed Today</h2>
+                <div class="input-group">
+                    <textarea id="work-performed" name="work-performed" rows="6" class="w-full" placeholder="Break it down by building/elevation or scope type. Example: Building 3 - South Elevation: Installed 7in Lap (Evening Blue), 2nd-floor line to top plate"></textarea>
+                </div>
+            </div>
+
+            <!-- Material Used (by Elevation) -->
+            <div class="mb-8">
+                <h2 class="section-header">Material Used (by Elevation)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-group md:col-span-2">
+                        <label for="material-elevation-select" class="block text-sm mb-1">Select Elevation:</label>
+                        <select id="material-elevation-select" class="w-full">
+                            <option value="">Select an elevation</option>
+                            <!-- Options from the elevations array will be populated here -->
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="lap-siding" class="block text-sm mb-1">Lap Siding:</label>
+                        <input type="text" id="lap-siding" class="w-full" placeholder="(type/size/color)">
+                    </div>
+                    <div class="input-group">
+                        <label for="panels-battens" class="block text-sm mb-1">Panels & Battens:</label>
+                        <input type="text" id="panels-battens" class="w-full">
+                    </div>
+                    <div class="input-group">
+                        <label for="trim-boards" class="block text-sm mb-1">Trim Boards:</label>
+                        <input type="text" id="trim-boards" class="w-full">
+                    </div>
+                    <div class="input-group">
+                        <label for="caulk" class="block text-sm mb-1">Caulk:</label>
+                        <input type="text" id="caulk" class="w-full">
+                    </div>
+                    <div class="input-group md:col-span-2">
+                        <label for="fasteners" class="block text-sm mb-1">Fasteners:</label>
+                        <input type="text" id="fasteners" class="w-full" placeholder="(Screws/Nails/Hidden Clip)">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="button" id="addMaterialBtn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 w-full mt-4">
+                            Add Material Entry
+                        </button>
+                    </div>
+                </div>
+                <div class="input-group mt-6">
+                    <label class="block text-sm mb-1">Recorded Material Entries:</label>
+                    <div id="materialEntriesList" class="selected-list">
+                        <p class="italic text-gray-500">No material entries recorded yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Material Deliveries and Requests (auto-filled) -->
+            <div class="mb-8">
+                <h2 class="section-header">Material Deliveries and Requests (auto-filled from Materials Request Form)</h2>
+                <div id="materialsList" class="space-y-4 text-sm text-gray-700">
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <p class="font-semibold text-green-800">Delivered: 3 pallets of 8.25in Arctic White.</p>
+                        <p class="mt-1"><span class="font-medium">Date:</span> 08/20/2025</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                        <p class="font-semibold text-red-800">Short: 2 boxes of Iron Gray caulk.</p>
+                        <p class="mt-1"><span class="font-medium">Needed by:</span> 08/21/2025</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <p class="font-semibold text-yellow-800">Requested: 10 bundles of siding.</p>
+                        <p class="mt-1"><span class="font-medium">Needed by:</span> 08/25/2025</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Issues and Punch Items (auto-filled) -->
+            <div class="mb-8">
+                <h2 class="section-header">Issues and Punch Items (auto-filled from Issues and Punch Items Form)</h2>
+                <!-- Fake, uneditable punch items list -->
+                <div id="issues-punch-list" class="space-y-4 text-sm text-gray-700">
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                        <p class="font-semibold text-red-800">Issue: Elevation discrepancy at balcony transition. Needs RFI.</p>
+                        <p class="mt-1"><span class="font-medium">Reported:</span> 08/18/2025</p>
+                        <p><span class="font-medium">Due:</span> 08/25/2025</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <p class="font-semibold text-yellow-800">Issue: HVAC ductwork conflicts with soffit installation on Building 4.</p>
+                        <p class="mt-1"><span class="font-medium">Reported:</span> 08/19/2025</p>
+                        <p><span class="font-medium">Due:</span> 08/28/2025</p>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg border border-gray-200">
+                        <p class="font-semibold text-gray-800">Issue: Caulking required on windows of Building 3, North side.</p>
+                        <p class="mt-1"><span class="font-medium">Reported:</span> 08/20/2025</p>
+                        <p><span class="font-medium">Due:</span> 08/23/2025</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weather Delays -->
+            <div class="mb-8">
+                <h2 class="section-header">Weather Delays</h2>
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="flex-grow p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div id="weatherDisplay" class="text-sm text-gray-700">
+                            <!-- Weather data will be injected here -->
+                            <p class="text-center text-gray-500">Loading weather data...</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <label for="weather-issue" class="text-sm font-semibold text-gray-600 mb-1 whitespace-nowrap">Weather Issue?</label>
+                        <input type="checkbox" id="weather-issue" name="weather-issue" class="w-6 h-6 text-blue-600 rounded focus:ring-blue-500">
+                    </div>
+                </div>
+                <div id="weatherDelayContainer" class="input-group hidden">
+                    <textarea id="weather-delays" name="weather-delays" rows="2" class="w-full" placeholder="Example: Monday Rain delay from 2 PM to 4 PM"></textarea>
+                </div>
+            </div>
+
+            <!-- Coordination Notes -->
+            <div class="mb-8">
+                <h2 class="section-header">Coordination Notes</h2>
+                <div class="input-group">
+                    <textarea id="coordination-notes" name="coordination-notes" rows="3" class="w-full" placeholder="Example: Window install ahead of us on Building 5- will follow after they clear"></textarea>
+                </div>
+            </div>
+
+            <!-- Photo Uploads -->
+            <div class="mb-8">
+                <h2 class="section-header">Photo Uploads (by Elevation)</h2>
+                
+                <div class="input-group mb-6">
+                    <label for="progress-photos" class="block text-sm mb-1">Progress photos (with dates):</label>
+                    <div id="progressPhotosUpload" class="image-upload-area">
+                        <p class="text-gray-500 text-sm">Drag and drop files here or click to browse</p>
+                        <input type="file" id="progressPhotosInput" class="hidden" multiple accept="image/*">
+                    </div>
+                    <div id="progressPhotosThumbnails" class="thumbnail-container"></div>
+                </div>
+
+                <div class="input-group">
+                    <label for="material-stock-photos" class="block text-sm mb-1">Material stock/staging (with dates):</label>
+                    <div id="materialPhotosUpload" class="image-upload-area">
+                        <p class="text-gray-500 text-sm">Drag and drop files here or click to browse</p>
+                        <input type="file" id="materialPhotosInput" class="hidden" multiple accept="image/*">
+                    </div>
+                    <div id="materialPhotosThumbnails" class="thumbnail-container"></div>
+                </div>
+            </div>
+
+            <!-- End of Week Notes -->
+            <div class="mb-8">
+                <h2 class="section-header">End of Week Notes (by each subcontractor)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                    <div class="input-group">
+                        <label for="elevation-select" class="block text-sm mb-1">Elevation:</label>
+                        <select id="elevation-select" name="elevation-select" class="w-full">
+                            <option value="">Select an elevation</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="percent-complete" class="block text-sm mb-1">% Complete:</label>
+                        <select id="percent-complete" name="percent-complete" class="w-full" disabled>
+                            <option value="">Select percentage</option>
+                            <option value="25%">25%</option>
+                            <option value="50%">50%</option>
+                            <option value="75%">75%</option>
+                            <option value="100%">100%</option>
+                        </select>
+                    </div>
+                    <!-- New fields for Square Feet and Linear Feet -->
+                    <div class="input-group">
+                        <label for="square-feet" class="block text-sm mb-1">Square Feet (for siding):</label>
+                        <input type="number" id="square-feet" name="square-feet" class="w-full" placeholder="Enter square footage">
+                    </div>
+                    <div class="input-group">
+                        <label for="linear-feet-fascia" class="block text-sm mb-1">Linear Feet for Fascia:</label>
+                        <input type="number" id="linear-feet-fascia" name="linear-feet-fascia" class="w-full" placeholder="Enter linear footage">
+                    </div>
+                    <div class="input-group">
+                        <label for="pallets-used" class="block text-sm mb-1">Pallets used so far per elevation (only when reach 100%):</label>
+                        <select id="pallets-used" name="pallets-used" class="w-full" disabled>
+                            <option value="">Select number of pallets</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="squares-used" class="block text-sm mb-1">Squares used so far per elevation (only when reach 100%):</label>
+                        <select id="squares-used" name="squares-used" class="w-full" disabled>
+                            <option value="">Select number of squares</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="button" id="addProgressBtn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 w-full mt-4">
+                            Add Progress Entry
+                        </button>
+                    </div>
+                </div>
+                <div class="input-group mt-6">
+                    <label class="block text-sm mb-1">Recorded Progress:</label>
+                    <div id="recordedProgressList" class="selected-list">
+                        <p class="italic text-gray-500">No progress recorded yet.</p>
+                    </div>
+                </div>
+                <!-- New Manpower Tracking Section -->
+                <div class="input-group md:col-span-2">
+                    <label class="block text-sm mb-1">Total Manpower Used:</label>
+                    <div class="flex flex-col sm:flex-row gap-2 items-center mb-4">
+                        <select id="manpower-select" class="w-full sm:w-1/2">
+                            <!-- Options populated by JS from selectedForemen -->
+                        </select>
+                        <button type="button" id="addManpowerBtn" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-200 w-full sm:w-auto">
+                            Add Crew
+                        </button>
+                    </div>
+                    <div id="manpowerList" class="selected-list show">
+                        <p class="italic text-gray-500">No manpower added for this week yet.</p>
+                    </div>
+                </div>
+                <!-- End of Week Notes Cont. -->
+                <div class="input-group md:col-span-2">
+                    <label for="tomorrows-plan" class="block text-sm mb-1">Tomorrow's Plan:</label>
+                    <textarea id="tomorrows-plan" name="tomorrows-plan" rows="3" class="w-full"></textarea>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <button type="button" id="generateSummaryBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-full hover:bg-blue-700 transition duration-300 shadow-lg w-full sm:w-auto">Generate Summary</button>
+                <button type="submit" class="bg-gray-400 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-500 transition duration-300 shadow-lg w-full sm:w-auto">Submit Log (Not Functional)</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Message Box for copy notification -->
+    <div id="messageBox" class="message-box">Summary Copied!</div>
+
+    <script>
+        // Data storage
+        let foremen = ['Carlos Hernandez', 'Maria Garcia', 'Ahmed Khan', 'Liam O\'Connell', 'David Chen', 'Emily Jones'];
+        let selectedForemen = [];
+        let elevations = [];
+        let trackedManpower = [];
+        let recordedProgress = [];
+        let materialEntries = [];
+        
+        // Function to populate the foreman dropdown
+        function populateForemanDropdown() {
+            const selectElement = document.getElementById('foreman-select');
+            selectElement.innerHTML = '';
+            foremen.forEach(foreman => {
+                const option = document.createElement('option');
+                option.value = foreman;
+                option.textContent = foreman;
+                selectElement.appendChild(option);
+            });
+        }
+        
+        // Function to display the selected foremen in the new list and update the manpower dropdown
+        function displaySelectedForemen() {
+            const listContainer = document.getElementById('selectedForemenList');
+            const manpowerSelect = document.getElementById('manpower-select');
+
+            listContainer.innerHTML = '';
+            manpowerSelect.innerHTML = '<option value="">Select crew</option>';
+
+            if (selectedForemen.length === 0) {
+                listContainer.innerHTML = '<p class="italic text-gray-500">No crew leads selected.</p>';
+            } else {
+                selectedForemen.forEach(foreman => {
+                    const item = document.createElement('div');
+                    item.className = 'selected-item';
+                    item.innerHTML = `
+                        <span>${foreman}</span>
+                        <button type="button" class="remove-btn" data-name="${foreman}">&times;</button>
+                    `;
+                    listContainer.appendChild(item);
+
+                    const option = document.createElement('option');
+                    option.value = foreman;
+                    option.textContent = foreman;
+                    manpowerSelect.appendChild(option);
+                });
+                listContainer.classList.add('show');
+            }
+        }
+        
+        // Add event listeners for foreman management
+        document.getElementById('foreman-select').addEventListener('change', (event) => {
+            const selectedOptions = Array.from(event.target.selectedOptions);
+            selectedOptions.forEach(option => {
+                const name = option.value;
+                if (!selectedForemen.includes(name)) {
+                    selectedForemen.push(name);
+                }
+            });
+            displaySelectedForemen();
+            event.target.selectedIndex = -1;
+        });
+        
+        document.getElementById('selectedForemenList').addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-btn')) {
+                const nameToRemove = event.target.dataset.name;
+                selectedForemen = selectedForemen.filter(name => name !== nameToRemove);
+                displaySelectedForemen();
+            }
+        });
+
+        document.getElementById('addForemanBtn').addEventListener('click', function() {
+            const newForemanNameInput = document.getElementById('newForemanName');
+            const newName = newForemanNameInput.value.trim();
+            if (newName && !foremen.includes(newName)) {
+                foremen.push(newName);
+                populateForemanDropdown();
+                newForemanNameInput.value = '';
+            }
+        });
+
+        // Elevation Management functions
+        function displayElevations() {
+            const listContainer = document.getElementById('elevationsList');
+            const elevationSelect = document.getElementById('elevation-select');
+            const materialElevationSelect = document.getElementById('material-elevation-select');
+            
+            listContainer.innerHTML = '';
+            elevationSelect.innerHTML = '<option value="">Select an elevation</option>';
+            materialElevationSelect.innerHTML = '<option value="">Select an elevation</option>';
+            
+            if (elevations.length === 0) {
+                listContainer.innerHTML = '<p class="italic text-gray-500">No elevations added yet.</p>';
+                listContainer.classList.remove('show');
+            } else {
+                elevations.forEach(elevation => {
+                    const item = document.createElement('div');
+                    item.className = 'selected-item';
+                    item.innerHTML = `
+                        <span>${elevation}</span>
+                        <button type="button" class="remove-btn" data-name="${elevation}">&times;</button>
+                    `;
+                    listContainer.appendChild(item);
+                    
+                    const option = document.createElement('option');
+                    option.value = elevation;
+                    option.textContent = elevation;
+                    elevationSelect.appendChild(option.cloneNode(true)); // Clone to use in both dropdowns
+                    materialElevationSelect.appendChild(option);
+                });
+                listContainer.classList.add('show');
+            }
+        }
+
+        // New event listener for the elevation-description dropdown
+        document.getElementById('elevation-description').addEventListener('change', function() {
+            const buildingNameInput = document.getElementById('building-name');
+            const elevationDescriptionInput = document.getElementById('elevation-description');
+            
+            const buildingName = buildingNameInput.value.trim();
+            const elevationDescription = elevationDescriptionInput.value.trim();
+            
+            if (buildingName && elevationDescription) {
+                const newElevation = `${buildingName} - ${elevationDescription}`;
+                if (!elevations.includes(newElevation)) {
+                    elevations.push(newElevation);
+                    displayElevations();
+                    // Reset dropdowns after adding
+                    buildingNameInput.value = '';
+                    elevationDescriptionInput.value = '';
+                }
+            }
+        });
+
+        document.getElementById('elevationsList').addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-btn')) {
+                const elevationToRemove = event.target.dataset.name;
+                elevations = elevations.filter(name => name !== elevationToRemove);
+                displayElevations();
+            }
+        });
+        
+        // Function to populate the Building dropdown
+        function populateBuildingDropdown() {
+            const selectElement = document.getElementById('building-name');
+            for (let i = 1; i <= 15; i++) {
+                const option = document.createElement('option');
+                option.value = `Building ${i}`;
+                option.textContent = `Building ${i}`;
+                selectElement.appendChild(option);
+            }
+        }
+
+        // Function to populate the pallets and squares dropdowns
+        function populateQuantityDropdowns() {
+            const palletsSelect = document.getElementById('pallets-used');
+            for (let i = 1; i <= 50; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                palletsSelect.appendChild(option);
+            }
+
+            const squaresSelect = document.getElementById('squares-used');
+            for (let i = 1; i <= 500; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                squaresSelect.appendChild(option);
+            }
+        }
+
+        // New Manpower tracking functions
+        function displayTrackedManpower() {
+            const listContainer = document.getElementById('manpowerList');
+            listContainer.innerHTML = '';
+
+            if (trackedManpower.length === 0) {
+                listContainer.innerHTML = '<p class="italic text-gray-500">No manpower added for this week yet.</p>';
+            } else {
+                trackedManpower.forEach(manpower => {
+                    const item = document.createElement('div');
+                    item.className = 'selected-item';
+                    item.innerHTML = `
+                        <span>${manpower}</span>
+                        <button type="button" class="remove-btn" data-name="${manpower}">&times;</button>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+        }
+
+        document.getElementById('addManpowerBtn').addEventListener('click', function() {
+            const manpowerSelect = document.getElementById('manpower-select');
+            const selectedManpower = manpowerSelect.value;
+            
+            if (selectedManpower && !trackedManpower.includes(selectedManpower)) {
+                trackedManpower.push(selectedManpower);
+                displayTrackedManpower();
+                manpowerSelect.value = '';
+            }
+        });
+
+        document.getElementById('manpowerList').addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-btn')) {
+                const manpowerToRemove = event.target.dataset.name;
+                trackedManpower = trackedManpower.filter(name => name !== manpowerToRemove);
+                displayTrackedManpower();
+            }
+        });
+
+        // Function to simulate fetching weather data
+        async function getWeatherForCharlotte() {
+            const weatherDisplay = document.getElementById('weatherDisplay');
+            weatherDisplay.innerHTML = '<p class="text-center text-gray-500">Loading weather data...</p>';
+
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            const mockWeather = {
+                temperature: 78,
+                condition: 'Partly Cloudy',
+                city: 'Charlotte, NC'
+            };
+
+            weatherDisplay.innerHTML = `
+                <p class="font-bold text-lg">${mockWeather.city}</p>
+                <p class="text-3xl font-bold mt-2">${mockWeather.temperature}°F</p>
+                <p class="text-sm text-gray-600 mt-1">${mockWeather.condition}</p>
+            `;
+        }
+        
+        // Event listener for the weather issue checkbox
+        document.getElementById('weather-issue').addEventListener('change', (event) => {
+            const weatherDelayContainer = document.getElementById('weatherDelayContainer');
+            if (event.target.checked) {
+                weatherDelayContainer.classList.remove('hidden');
+            } else {
+                weatherDelayContainer.classList.add('hidden');
+                document.getElementById('weather-delays').value = '';
+            }
+        });
+
+        // Image upload functions
+        function handleImageUpload(input, uploadArea, thumbnailContainer) {
+            function handleFiles(files) {
+                thumbnailContainer.innerHTML = '';
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const thumbnailDiv = document.createElement('div');
+                            thumbnailDiv.className = 'thumbnail';
+                            thumbnailDiv.innerHTML = `
+                                <img src="${e.target.result}" alt="thumbnail">
+                                <span class="remove-thumbnail">&times;</span>
+                            `;
+                            thumbnailDiv.querySelector('.remove-thumbnail').addEventListener('click', () => {
+                                thumbnailDiv.remove();
+                            });
+                            thumbnailContainer.appendChild(thumbnailDiv);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            uploadArea.addEventListener('click', () => input.click());
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('hover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('hover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('hover');
+                if (e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+
+            input.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFiles(e.target.files);
+                }
+            });
+        }
+
+        // Function to populate the time dropdowns
+        function populateTimeDropdowns() {
+            const startSelect = document.getElementById('start-time');
+            const endSelect = document.getElementById('end-time');
+            
+            startSelect.innerHTML = '<option value="">Start Time</option>';
+            endSelect.innerHTML = '<option value="">End Time</option>';
+            
+            const startHour = 7; // 7 AM
+            const endHour = 19; // 7 PM (19:00)
+            
+            for (let hour = startHour; hour <= endHour; hour++) {
+                for (let minute = 0; minute < 60; minute += 15) {
+                    const hourStr = String(hour).padStart(2, '0');
+                    const minuteStr = String(minute).padStart(2, '0');
+                    const time = `${hourStr}:${minuteStr}`;
+                    const displayTime = `${(hour % 12) || 12}:${minuteStr} ${hour >= 12 ? 'PM' : 'AM'}`;
+                    
+                    const startOption = document.createElement('option');
+                    startOption.value = time;
+                    startOption.textContent = displayTime;
+                    startSelect.appendChild(startOption);
+
+                    const endOption = document.createElement('option');
+                    endOption.value = time;
+                    endOption.textContent = displayTime;
+                    endSelect.appendChild(endOption);
+                }
+            }
+        }
+
+
+        // Set the default date to today's date and populate dropdowns and weather on load
+        window.addEventListener('load', () => {
+            const today = new Date().toISOString().slice(0, 10);
+            document.getElementById('date').value = today;
+            populateForemanDropdown();
+            displaySelectedForemen();
+            populateTimeDropdowns(); // Populate the new time dropdowns
+            populateBuildingDropdown(); // Populate the new building dropdown
+            displayElevations();
+            populateQuantityDropdowns();
+            getWeatherForCharlotte();
+            displayTrackedManpower();
+            displayRecordedProgress();
+            displayMaterialEntries();
+
+            handleImageUpload(
+                document.getElementById('progressPhotosInput'),
+                document.getElementById('progressPhotosUpload'),
+                document.getElementById('progressPhotosThumbnails')
+            );
+            handleImageUpload(
+                document.getElementById('materialPhotosInput'),
+                document.getElementById('materialPhotosUpload'),
+                document.getElementById('materialPhotosThumbnails')
+            );
+        });
+        
+        // Listen for changes on the elevation dropdown
+        document.getElementById('elevation-select').addEventListener('change', function(event) {
+            const elevationDropdown = event.target;
+            const percentDropdown = document.getElementById('percent-complete');
+            
+            // Enable % complete dropdown only if an elevation is selected
+            percentDropdown.disabled = !elevationDropdown.value;
+
+            // Reset other dropdowns
+            percentDropdown.value = '';
+            document.getElementById('pallets-used').value = '';
+            document.getElementById('pallets-used').disabled = true;
+            document.getElementById('pallets-used').classList.remove('required-field');
+            document.getElementById('squares-used').value = '';
+            document.getElementById('squares-used').disabled = true;
+            document.getElementById('squares-used').classList.remove('required-field');
+            document.getElementById('square-feet').value = '';
+            document.getElementById('square-feet').disabled = true;
+            document.getElementById('square-feet').classList.remove('required-field');
+        });
+
+        // Listen for changes on the % Complete dropdown
+        document.getElementById('percent-complete').addEventListener('change', function(event) {
+            const is100Percent = event.target.value === '100%';
+            const palletsSelect = document.getElementById('pallets-used');
+            const squaresSelect = document.getElementById('squares-used');
+            const squareFeetInput = document.getElementById('square-feet');
+
+            // Enable pallets, squares, and square feet only if 100% is selected
+            palletsSelect.disabled = !is100Percent;
+            squaresSelect.disabled = !is100Percent;
+            squareFeetInput.disabled = !is100Percent;
+            
+            // Add or remove 'required-field' class and 'required' attribute
+            if (is100Percent) {
+                palletsSelect.classList.add('required-field');
+                squaresSelect.classList.add('required-field');
+                squareFeetInput.classList.add('required-field');
+                palletsSelect.setAttribute('required', '');
+                squaresSelect.setAttribute('required', '');
+                squareFeetInput.setAttribute('required', '');
+            } else {
+                palletsSelect.classList.remove('required-field');
+                squaresSelect.classList.remove('required-field');
+                squareFeetInput.classList.remove('required-field');
+                palletsSelect.removeAttribute('required');
+                squaresSelect.removeAttribute('required');
+                squareFeetInput.removeAttribute('required');
+                palletsSelect.value = '';
+                squaresSelect.value = '';
+                squareFeetInput.value = '';
+            }
+        });
+
+        // New event listener for the new Add Progress button
+        document.getElementById('addProgressBtn').addEventListener('click', function() {
+            recordProgress();
+        });
+        
+        // Record progress function
+        function recordProgress() {
+            const elevation = document.getElementById('elevation-select').value;
+            const percent = document.getElementById('percent-complete').value;
+            const squareFeet = document.getElementById('square-feet').value;
+            const linearFeetFascia = document.getElementById('linear-feet-fascia').value;
+            const pallets = document.getElementById('pallets-used').value;
+            const squares = document.getElementById('squares-used').value;
+
+            // Validation for 100% completion
+            if (percent === '100%' && (!pallets || !squares || !squareFeet)) {
+                // Show a simple message box for now
+                showMessageBox("Pallets, Squares, and Square Feet fields are required for 100% completion.");
+                return; // Stop the function
+            }
+        
+            if (elevation && percent) {
+                const existingIndex = recordedProgress.findIndex(item => item.elevation === elevation);
+                
+                const newProgress = {
+                    elevation: elevation,
+                    percent: percent,
+                    squareFeet: squareFeet,
+                    linearFeetFascia: linearFeetFascia,
+                    pallets: pallets,
+                    squares: squares
+                };
+        
+                if (existingIndex > -1) {
+                    recordedProgress[existingIndex] = newProgress;
+                } else {
+                    recordedProgress.push(newProgress);
+                }
+                
+                displayRecordedProgress();
+                
+                // Clear the form fields for the next entry
+                document.getElementById('elevation-select').value = '';
+                document.getElementById('percent-complete').value = '';
+                document.getElementById('percent-complete').disabled = true;
+                document.getElementById('square-feet').value = '';
+                document.getElementById('square-feet').disabled = true;
+                document.getElementById('square-feet').classList.remove('required-field');
+                document.getElementById('linear-feet-fascia').value = '';
+                document.getElementById('pallets-used').value = '';
+                document.getElementById('pallets-used').disabled = true;
+                document.getElementById('pallets-used').classList.remove('required-field');
+                document.getElementById('squares-used').value = '';
+                document.getElementById('squares-used').disabled = true;
+                document.getElementById('squares-used').classList.remove('required-field');
+            }
+        }
+
+        // Helper function to show a message box
+        function showMessageBox(message) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.innerText = message;
+            messageBox.style.backgroundColor = '#dc2626'; // Red for error
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+                messageBox.style.backgroundColor = '#10b981'; // Reset to green
+            }, 3000);
+        }
+        
+        function displayRecordedProgress() {
+            const listContainer = document.getElementById('recordedProgressList');
+            
+            if (recordedProgress.length === 0) {
+                listContainer.classList.remove('show');
+                listContainer.innerHTML = '<p class="italic text-gray-500">No progress recorded yet.</p>';
+            } else {
+                listContainer.innerHTML = '';
+                recordedProgress.forEach((progress, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'selected-item';
+                    let progressText = `${progress.elevation}: ${progress.percent} Complete`;
+                    if (progress.squareFeet) {
+                        progressText += `, Sq.Ft.: ${progress.squareFeet}`;
+                    }
+                    if (progress.linearFeetFascia) {
+                        progressText += `, Lin.Ft. Fascia: ${progress.linearFeetFascia}`;
+                    }
+                    if (progress.pallets) {
+                        progressText += `, Pallets Used: ${progress.pallets}`;
+                    }
+                    if (progress.squares) {
+                        progressText += `, Squares Used: ${progress.squares}`;
+                    }
+                    item.innerHTML = `<span>${progressText}</span><button type="button" class="remove-btn" data-index="${index}">&times;</button>`;
+                    listContainer.appendChild(item);
+                });
+                listContainer.classList.add('show');
+            }
+        }
+
+        document.getElementById('recordedProgressList').addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-btn')) {
+                const indexToRemove = event.target.dataset.index;
+                recordedProgress.splice(indexToRemove, 1);
+                displayRecordedProgress();
+            }
+        });
+
+        // New functions for Material Tracking
+        function displayMaterialEntries() {
+            const listContainer = document.getElementById('materialEntriesList');
+            listContainer.innerHTML = '';
+
+            if (materialEntries.length === 0) {
+                listContainer.innerHTML = '<p class="italic text-gray-500">No material entries recorded yet.</p>';
+                listContainer.classList.remove('show');
+            } else {
+                materialEntries.forEach((entry, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'selected-item flex-col items-start';
+                    let content = `
+                        <span class="font-semibold text-base">${entry.elevation}</span>
+                        <div class="text-xs text-gray-700 mt-1 space-y-1">
+                    `;
+                    if (entry.lapSiding) { content += `<div>Lap Siding: ${entry.lapSiding}</div>`; }
+                    if (entry.panelsBattens) { content += `<div>Panels & Battens: ${entry.panelsBattens}</div>`; }
+                    if (entry.trimBoards) { content += `<div>Trim Boards: ${entry.trimBoards}</div>`; }
+                    if (entry.caulk) { content += `<div>Caulk: ${entry.caulk}</div>`; }
+                    if (entry.fasteners) { content += `<div>Fasteners: ${entry.fasteners}</div>`; }
+                    content += `</div><button type="button" class="remove-btn" data-index="${index}">&times;</button>`;
+                    item.innerHTML = content;
+                    listContainer.appendChild(item);
+                });
+                listContainer.classList.add('show');
+            }
+        }
+
+        document.getElementById('addMaterialBtn').addEventListener('click', function() {
+            const materialElevation = document.getElementById('material-elevation-select').value;
+            const lapSiding = document.getElementById('lap-siding').value.trim();
+            const panelsBattens = document.getElementById('panels-battens').value.trim();
+            const trimBoards = document.getElementById('trim-boards').value.trim();
+            const caulk = document.getElementById('caulk').value.trim();
+            const fasteners = document.getElementById('fasteners').value.trim();
+
+            if (materialElevation && (lapSiding || panelsBattens || trimBoards || caulk || fasteners)) {
+                const newEntry = {
+                    elevation: materialElevation,
+                    lapSiding: lapSiding,
+                    panelsBattens: panelsBattens,
+                    trimBoards: trimBoards,
+                    caulk: caulk,
+                    fasteners: fasteners
+                };
+                materialEntries.push(newEntry);
+                displayMaterialEntries();
+
+                // Clear fields for new entry
+                document.getElementById('material-elevation-select').value = '';
+                document.getElementById('lap-siding').value = '';
+                document.getElementById('panels-battens').value = '';
+                document.getElementById('trim-boards').value = '';
+                document.getElementById('caulk').value = '';
+                document.getElementById('fasteners').value = '';
+            }
+        });
+
+        document.getElementById('materialEntriesList').addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-btn')) {
+                const indexToRemove = event.target.dataset.index;
+                materialEntries.splice(indexToRemove, 1);
+                displayMaterialEntries();
+            }
+        });
+
+        document.getElementById('generateSummaryBtn').addEventListener('click', function() {
+            event.preventDefault();
+
+            // Check for required fields for 100% completion before generating summary
+            const percentDropdown = document.getElementById('percent-complete');
+            if (percentDropdown.value === '100%') {
+                const palletsSelect = document.getElementById('pallets-used');
+                const squaresSelect = document.getElementById('squares-used');
+                const squareFeetInput = document.getElementById('square-feet');
+                
+                if (!palletsSelect.value || !squaresSelect.value || !squareFeetInput.value) {
+                    showMessageBox("Please fill in Pallets, Squares, and Square Feet fields for the 100% completion entry.");
+                    return;
+                }
+            }
+
+
+            const form = document.getElementById('dailyLogForm');
+            const data = {};
+            new FormData(form).forEach((value, key) => {
+                data[key] = value;
+            });
+
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+            
+            let foremanLeads = 'N/A';
+            if (selectedForemen.length > 0) {
+                foremanLeads = selectedForemen.join(' | ');
+            }
+
+            let summary = '';
+            summary += '--- Daily Log Summary ---\n\n';
+            summary += 'Date: ' + (data['date'] || 'N/A') + '\n';
+            summary += 'Project Name (Phase): ' + (data['project-name'] || 'N/A') + '\n';
+            summary += 'Type of Project: ' + (data['project-type'] || 'N/A') + '\n\n';
+
+            summary += '--- Team Information ---\n';
+            summary += 'Project Manager: ' + (data['project-manager'] || 'N/A') + '\n';
+            summary += 'Assistant Project Manager: ' + (data['assistant-project-manager'] || 'N/A') + '\n';
+            summary += 'Field Manager: ' + (data['field-manager'] || 'N/A') + '\n';
+            summary += 'Foreman/Crew Lead: ' + foremanLeads + '\n';
+            summary += 'Start Time: ' + (startTime || 'N/A') + '\n';
+            summary += 'End Time: ' + (endTime || 'N/A') + '\n\n';
+
+            summary += '--- Elevation Information ---\n';
+            if (elevations.length > 0) {
+                summary += 'Elevations in progress: ' + elevations.join(' | ') + '\n\n';
+            } else {
+                summary += 'No elevations defined.\n\n';
+            }
+
+            summary += '--- Work Performed Today ---\n';
+            summary += (data['work-performed'] || 'N/A') + '\n\n';
+
+            // Updated summary section for materials
+            summary += '--- Material Used (by Elevation) ---\n';
+            if (materialEntries.length > 0) {
+                materialEntries.forEach(entry => {
+                    summary += `Elevation: ${entry.elevation}\n`;
+                    if (entry.lapSiding) { summary += `  Lap Siding: ${entry.lapSiding}\n`; }
+                    if (entry.panelsBattens) { summary += `  Panels & Battens: ${entry.panelsBattens}\n`; }
+                    if (entry.trimBoards) { summary += `  Trim Boards: ${entry.trimBoards}\n`; }
+                    if (entry.caulk) { summary += `  Caulk: ${entry.caulk}\n`; }
+                    if (entry.fasteners) { summary += `  Fasteners: ${entry.fasteners}\n`; }
+                    summary += '\n'; // Add a newline for separation
+                });
+            } else {
+                summary += 'No material entries recorded.\n\n';
+            }
+
+            const materialsContent = Array.from(document.querySelectorAll('#materialsList p')).map(p => p.innerText.trim()).join('\n');
+            summary += '--- Material Deliveries and Requests (auto-filled) ---\n';
+            summary += materialsContent + '\n\n';
+
+            const issuesContent = Array.from(document.querySelectorAll('#issues-punch-list p')).map(p => p.innerText.trim()).join('\n');
+            summary += '--- Issues and Punch Items (auto-filled) ---\n';
+            summary += issuesContent + '\n\n';
+
+            summary += '--- Weather Delays ---\n';
+            const weatherDisplayContent = document.getElementById('weatherDisplay').innerText.trim();
+            if (document.getElementById('weather-issue').checked) {
+                summary += `Today's Weather: ${weatherDisplayContent}\n`;
+                summary += `Weather Delay Details: ${document.getElementById('weather-delays').value || 'N/A'}\n\n`;
+            } else {
+                summary += `Today's Weather: ${weatherDisplayContent}\n`;
+                summary += 'No weather-related delays reported.\n\n';
+            }
+
+            const progressPhotoCount = document.querySelectorAll('#progressPhotosThumbnails .thumbnail').length;
+            const materialPhotoCount = document.querySelectorAll('#materialPhotosThumbnails .thumbnail').length;
+            summary += '--- Photo Uploads ---\n';
+            summary += `Progress Photos: ${progressPhotoCount} uploaded\n`;
+            summary += `Material Stock/Staging Photos: ${materialPhotoCount} uploaded\n\n`;
+
+            summary += '--- Coordination Notes ---\n';
+            summary += (data['coordination-notes'] || 'N/A') + '\n\n';
+
+            summary += '--- End of Week Notes ---\n';
+            recordedProgress.forEach(progress => {
+                let progressText = `Elevation: ${progress.elevation}, % Complete: ${progress.percent}`;
+                if (progress.squareFeet) {
+                    progressText += `, Sq.Ft.: ${progress.squareFeet}`;
+                }
+                if (progress.linearFeetFascia) {
+                    progressText += `, Lin.Ft. Fascia: ${progress.linearFeetFascia}`;
+                }
+                if (progress.pallets) {
+                    progressText += `, Pallets Used: ${progress.pallets}`;
+                }
+                if (progress.squares) {
+                    progressText += `, Squares Used: ${progress.squares}`;
+                }
+                summary += progressText + '\n';
+            });
+            if (recordedProgress.length === 0) {
+                summary += 'No elevation progress recorded.\n';
+            }
+            summary += 'Total Manpower Used: ' + (trackedManpower.length > 0 ? trackedManpower.join(' | ') : 'N/A') + '\n';
+            summary += "Tomorrow's Plan: " + (data['tomorrows-plan'] || 'N/A') + '\n';
+            
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = summary;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextarea);
+            
+            const messageBox = document.getElementById('messageBox');
+            messageBox.innerText = 'Summary Copied!'; // Change message to success
+            messageBox.style.backgroundColor = '#10b981'; // Green for success
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        });
+
+        document.getElementById('dailyLogForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+        });
+    </script>
+
+</body>
+</html>
